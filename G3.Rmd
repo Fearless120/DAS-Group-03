@@ -1,0 +1,48 @@
+---
+title: "G3"
+output: html_document
+date: "2023-03-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#The median number of family members and expenditure is divided into two categories
+ddd
+```{r}
+library(tidyverse)
+library(moderndive)
+library(gapminder)
+library(sjPlot)
+library(stats)
+library(jtools)
+```
+
+
+```{r}
+# delete region
+# 大于4为1，小于等于4为0
+data = read.csv('C:/Users/12493/Desktop/dataset3.csv')
+data = data[,-2]
+data$Total.Number.of.Family.members[data$Total.Number.of.Family.members <= 4] = 0
+data$Total.Number.of.Family.members[data$Total.Number.of.Family.members > 4] = 1
+```
+
+```{r}
+data$Household.Head.Sex = as.factor(data$Household.Head.Sex)
+data$Type.of.Household = as.factor(data$Type.of.Household)
+data$Electricity = as.factor(data$Electricity)
+data$Total.Number.of.Family.members = as.factor(data$Total.Number.of.Family.members)
+```
+
+```{r}
+mod = glm(Total.Number.of.Family.members ~ Total.Household.Income + Total.Food.Expenditure + Household.Head.Sex + Household.Head.Age + Type.of.Household + House.Floor.Area + House.Age + Number.of.bedrooms + Electricity, data = data,
+family = binomial(link = "logit"))
+mod %>%
+summary()
+```
+```{r}
+plot_model(mod, show.values = TRUE,
+title = "", show.p = FALSE, value.offset = 0.25)
+```
+
