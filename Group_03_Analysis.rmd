@@ -21,7 +21,8 @@ fig_caption: yes
 knitr::opts_chunk$set(echo = FALSE, eval = TRUE, warning = FALSE, message = FALSE, comment = NA)
 ```
 
-```{r libraries}
+```{r libraries} 
+# Load required libraries
 library(tidyverse)
 library(moderndive)
 library(skimr)
@@ -43,9 +44,9 @@ library(AICcmodavg)
 ```
 
 ```{r data, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
-data <- read_csv("dataset3.csv")
-data$Electricity <- factor(x = data$Electricity, levels = c(0,1), labels = c("No","Yes"))
-data = data[,-2]
+data <- read_csv("dataset3.csv") #Read the dataset
+data$Electricity <- factor(x = data$Electricity, levels = c(0,1), labels = c("No","Yes")) #Create labels for Electricity
+data = data[,-2] #Drop "Region" from the dataset
 ```
 
 # Introduction {#sec:Intro}
@@ -59,6 +60,8 @@ We will examine which household-related variables influence the number of people
 List of Variable are given in table \ref{tab:variables}
 
 ```{r variables , echo=FALSE, results='asis'}
+#Creat a table of Variables and Description
+
 cat(' Table: \\label{tab:variables}Description of Variables
   
 | Variable| Description|
@@ -84,6 +87,7 @@ Since we have the same region throughout the dataset, we will consider dropping 
 ## Summary Statistics {#sec:summarystats}
 Summary is given in Table \ref{tab:summary}:
 ```{r summary}
+#Summary Statistics
 kable(
   list(summary(data[,1:3]), summary(data[,4:6]), summary(data[,7:10])),
   caption = '\\label{tab:summary} Summary',
@@ -96,6 +100,7 @@ kable(
 ## Plots {#sec:plots}
 
 ```{r histogram, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:histogram}Histogram"}
+#Histogram of the response variable
 ggplot(data = data, mapping = aes(x = Total.Number.of.Family.members), stat = count) +
   geom_histogram()+
   xlab("Number of people in the house") +
@@ -106,6 +111,7 @@ From Figure \ref{fig:histogram}, the histogram seems to be right skewed, suggest
 
 
 ```{r ggpairs, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:ggpairs}Scatterplot matrix", fig.height = 15, fig.width= 15}
+#Scatterplot matrix
 ggpairs(data[,c(6,1,2,4,7:9)], title="Scatterplot matrix",
         upper=list(continuous=wrap("points", alpha=0.1)),
         lower = list(continuous = wrap("cor", size = 7)),
@@ -114,6 +120,7 @@ ggpairs(data[,c(6,1,2,4,7:9)], title="Scatterplot matrix",
 
 
 ```{r autocorr, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:autocorr}Autocorr", fig.height = 15, fig.width= 15}
+#Check for autocorrelation
 ggpairs(data[,c(1,2,4,7:9)], title="Autocorrelation",
         upper="blank",
         lower = list(continuous = wrap("cor", size = 7)),
@@ -122,23 +129,26 @@ ggpairs(data[,c(1,2,4,7:9)], title="Autocorrelation",
 From Figure \ref{fig:autocorr}, there seems to be a strong correlation between Total Income and Expenditure on Food. We might consider dropping one of these variables from the model.
 
 ```{r boxplot, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:boxplot}Boxplot", fig.height = 15, fig.width= 15}
+#Crate a theme forboxplot with font size of labels
 My_Theme = theme(plot.title = element_text(size=25),
                  axis.text=element_text(size=20),
                  axis.title=element_text(size=20),
                  legend.title = element_text(size=20),
                  legend.text = element_text(size=20))
-
+#Boxplot of Total Number of Family Members against Household Head Sex
 p1 <- ggplot(data, mapping = aes(x = Household.Head.Sex, y = Total.Number.of.Family.members)) +
   geom_boxplot(aes(fill = Household.Head.Sex) )+
   labs(x = "Household Head Sex", y = "Total.Number.of.Family.members",
        title = "Household Head Sex") + My_Theme
 
+#Boxplot of Total Number of Family Members against Type of Household
 p2 <- ggplot(data, mapping = aes(x = Type.of.Household, y = Total.Number.of.Family.members)) +
   geom_boxplot(aes(fill = Type.of.Household)) +
   labs(x = "Type.of.Household", y = "Total.Number.of.Family.members",
        title = "Type of Household") +
   scale_x_discrete(labels = c("Extended","Single", "Nonrelated")) + My_Theme
 
+#Boxplot of Total Number of Family Members against Type of Household
 p3 <- ggplot(data, mapping = aes(x = Electricity, y = Total.Number.of.Family.members)) +
   geom_boxplot(aes(fill = Electricity)) +
   labs(x = "Electricity", y = "Total.Number.of.Family.members",
@@ -157,6 +167,8 @@ From the boxplots in Figure \ref{fig:boxplot},
 
 
 ```{r type-sex, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:type-sex} Barplot of Type of Household and Household Head Sex"}
+
+#Proportion of Household Head Sex in each Household Type
 data %>%
   group_by(Type.of.Household, Household.Head.Sex) %>% 
   count() %>% 
@@ -171,6 +183,7 @@ data %>%
 ```
 
 ```{r prop1}
+#Proportion Table
 data %>%
   group_by(Type.of.Household, Household.Head.Sex) %>% 
   count() %>% 
@@ -183,6 +196,7 @@ data %>%
 From the Barplot in Figure \ref{fig:type-sex}, overall, the proportion is higher for male household heads than females.
 
 ```{r type-e, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:type-e} Barplot of Type of Household and Electricity"}
+#Proportion of Electricity in each Household
 data %>%
   group_by(Type.of.Household, Electricity) %>% 
   count() %>% 
@@ -197,6 +211,7 @@ data %>%
 ```
 
 ```{r prop2}
+#Proportion Table
 data %>%
   group_by(Type.of.Household, Electricity) %>% 
   count() %>% 
@@ -213,6 +228,7 @@ From the Barplot in Figure \ref{fig:type-e},
 2. Around 8% and 16% of the Extended family and Single family households have no electricity, respectively.
 
 ```{r elec-sex, fig.pos = "H", fig.align = "center", fig.cap="\\label{fig:elect-sex} Barplot of Electricity and Househols Head Sex"}
+#Proportion of Household Head Sex in each Electricity Category
 data %>%
   group_by(Electricity, Household.Head.Sex) %>% 
   count() %>% 
@@ -226,6 +242,7 @@ data %>%
 ```
 
 ```{r prop3}
+#Proportion Table
 data %>%
   group_by(Electricity, Household.Head.Sex) %>% 
   count() %>% 
@@ -243,23 +260,56 @@ From the Barplot in Figure \ref{fig:elec-sex},
 \newpage
 
 # Formal Data Analysis {#sec:FDA}
+
+## Logistic Regression {#sec:Logistic}
+We will model the data using Logistic Regression, by converting Total.Number.of.Family.members to a binary variable. We create a new variable, Members.bi and set it to 0 if Total.Number.of.Family.members less than or equal to 4 and 1 otherwise.
+```{r}
+ data = data %>%
+  #Create new column for logistic regression
+  mutate(Members.bi = ifelse(Total.Number.of.Family.members > 4, 1, 0)) %>%
+  #Change sole columns to factors
+  mutate(Household.Head.Sex = as.factor(Household.Head.Sex),
+         Type.of.Household = as.factor(Type.of.Household),
+         Electricity = as.factor(Electricity),
+         Total.Number.of.Family.members = as.factor(Total.Number.of.Family.members))
+```
+ 
+```{r logistic}
+#Logistic regression model with glm()
+mod = glm(Total.Number.of.Family.members ~ ., data = data, family = binomial(link = "logit"))
+
+coef(summary(mod)) %>% kable(caption = '\\label{tab:logistic}Logistic Model Coefficients') %>%
+  kable_styling(font_size = 10, latex_options = "hold_position")
+```
+
+## Poisson Regression {#sec:Poisson}
+```{r}
+data <- read_csv("dataset3.csv")
+data$Electricity <- factor(x = data$Electricity, levels = c(0,1), labels = c("No","Yes"))
+data = data[,-2]
+```
+
 ```{r model1}
+#Main effects model
 model1 = glm(Total.Number.of.Family.members ~ ., family = poisson, data = data)
 #summ(model1)
 ```
 
 ```{r model2}
+#Updated from model 1 by dropping insignificant terms
 model2 <- glm(Total.Number.of.Family.members ~ . -House.Floor.Area -Number.of.bedrooms,
              family = poisson, data = data)
 #summ(model2)
 ```
 
 ```{r model3}
+#two way interactions model
 model3 <- glm(Total.Number.of.Family.members ~ .*., family = poisson, data = data)
 #summ(model3)
 ```
 
 ```{r model4}
+#updated model 3
 model4 <- glm(Total.Number.of.Family.members ~ .*. -House.Age:Electricity -Total.Household.Income:House.Age
              -Household.Head.Sex:Household.Head.Age -Total.Food.Expenditure:House.Floor.Area 
              -House.Floor.Area:Electricity -Household.Head.Age:Type.of.Household 
@@ -285,6 +335,7 @@ Model 3, with all two-way interactions, was considered along with Model 4 and Mo
 
 
 ```{r model5}
+#updated model 3
 model5 <- glm(Total.Number.of.Family.members ~ .*. -House.Age:Electricity -Total.Household.Income:House.Age
              -Household.Head.Sex:Household.Head.Age -Total.Food.Expenditure:House.Floor.Area 
              -House.Floor.Area:Electricity -Household.Head.Age:Type.of.Household 
@@ -313,27 +364,32 @@ coef(summary(model5)) %>% kable(caption = '\\label{tab:model5}Model 5 Coefficien
 
 
 ```{r anova1}
+#Anova test comparison between model1 and model2
 anova(model1, model2, test = "Chisq") %>% kable(caption = '\\label{tab:anova1}Compare Model 1 and 2', digits = 2) %>%
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r anova2}
+#Anova test comparison between model1 and model3
 anova(model1, model3, test = "Chisq") %>% kable(caption = '\\label{tab:anova2}Compare Model 1 and 3', digits = 2) %>%
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r anova3}
+#Anova test comparison between model3 and model4
 anova(model3, model4, test = "Chisq") %>% kable(caption = '\\label{tab:anova3}Compare Model 3 and 4', digits = 2) %>%
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 
 ```{r anova4}
-anova(model4, model5, test = "Chisq") %>% kable(caption = '\\label{tab:anova3}Compare Model 4 and 5', digits = 2) %>%
+#Anova test comparison between model4 and model5
+anova(model4, model5, test = "Chisq") %>% kable(caption = '\\label{tab:anova4}Compare Model 4 and 5', digits = 2) %>%
   kable_styling(font_size = 10, latex_options = "hold_position")
 ```
 From, Tables \ref{tab:anova2},\ref{tab:anova3} and \ref{tab:anova4}, Model 5 seemed to fit the data best.
 
 ```{r confint}
+#Confidence Interval for model 5
 confint(model5) %>%
   kable(caption = '\\label{tab:confit}Confidence Interval') %>%
   kable_styling(latex_options = "hold_position")
