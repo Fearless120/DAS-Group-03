@@ -1,6 +1,5 @@
 ---
-title: "Data Analysis Skills"
-subtitle: "Group 03"
+title: "Group 03"
 author: "Calum Lawson, Savitha Sundaresan, Wenyu Qu, Yimeng Zhang, Yuezhu Guo"
 output:
   pdf_document:
